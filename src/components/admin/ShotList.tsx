@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import MentionTextarea from '@/components/admin/MentionTextarea'
 import {
   Plus, Trash2, Wand2, ExternalLink, ChevronDown, ChevronUp,
   Camera, Move, Eye, Clock, FileText, Mic, Package, StickyNote,
@@ -138,6 +139,21 @@ export default function ShotList({
     setShots(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s))
     await supabase.from('shots').update({ [field]: value }).eq('id', id)
     setSaving(prev => { const n = new Set(prev); n.delete(id); return n })
+  }
+
+  // Handle @mention field selection from the description textarea
+  function handleMentionFieldSelect(shotId: string, field: string, value: string, label: string) {
+    if (field === 'props_append') {
+      // Append to props (comma-separated)
+      const shot = shots.find(s => s.id === shotId)
+      const existing = shot?.props ?? ''
+      const newProps = existing
+        ? `${existing}, ${label}`
+        : label
+      updateShot(shotId, 'props', newProps)
+    } else {
+      updateShot(shotId, field, value)
+    }
   }
 
   async function generateStoryboard(shot: Shot) {
@@ -326,11 +342,11 @@ export default function ShotList({
 
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted-foreground flex items-center gap-1.5"><Eye className="w-3 h-3" /> Description</label>
-                        <Textarea
+                        <MentionTextarea
                           value={shot.description || ''}
-                          onChange={e => updateShot(shot.id, 'description', e.target.value)}
-                          placeholder="What's happening in this shot..."
-                          className="text-sm resize-none"
+                          onChange={val => updateShot(shot.id, 'description', val)}
+                          onFieldSelect={(field, value, label) => handleMentionFieldSelect(shot.id, field, value, label)}
+                          placeholder="What's happening... type @ to reference shot type, angle, movement or prop"
                           rows={3}
                         />
                       </div>
