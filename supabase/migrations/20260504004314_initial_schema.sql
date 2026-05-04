@@ -296,16 +296,20 @@ create trigger set_updated_at before update on publish_records
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into profiles (id, email, full_name, role)
+  insert into public.profiles (id, email, full_name, role)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
-    coalesce((new.raw_user_meta_data->>'role')::user_role, 'admin')
+    case
+      when new.raw_user_meta_data->>'role' in ('admin', 'brand', 'creator')
+      then (new.raw_user_meta_data->>'role')::public.user_role
+      else 'admin'::public.user_role
+    end
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger on_auth_user_created
   after insert on auth.users
