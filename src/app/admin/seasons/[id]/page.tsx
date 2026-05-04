@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, Film } from 'lucide-react'
 import type { EpisodePhase, SeasonStatus } from '@/lib/supabase/types'
+import SeasonAiDirectorButton from '@/components/admin/SeasonAiDirectorButton'
 
 const PHASE_ORDER: EpisodePhase[] = ['commissioning', 'development', 'pre_production', 'production', 'post', 'distribution', 'publishing', 'evaluation']
 const SEASON_ORDER: SeasonStatus[] = ['development', 'pre_production', 'production', 'post', 'distribution', 'complete']
@@ -65,6 +66,12 @@ export default async function SeasonDetailPage({ params }: { params: Promise<{ i
             {(season.brands as any)?.company_name && ` · ${(season.brands as any).company_name}`}
           </p>
         </div>
+        <SeasonAiDirectorButton
+          seasonId={id}
+          seasonTitle={season.title}
+          episodeCount={season.episode_count}
+          showBible={season.show_bible}
+        />
       </div>
 
       {/* Season progress */}
