@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import {
   Sparkles, X, Send, RotateCcw, CheckCircle2, Loader2,
-  Circle, Film, ListVideo,
+  Circle, Film, ListVideo, Mic, MicOff,
 } from 'lucide-react'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
 
 type Props = {
   seasonId: string
@@ -35,6 +36,10 @@ export default function SeasonAiDirectorPanel({
   const [inputValue, setInputValue] = useState('')
   const [hasStarted, setHasStarted] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+
+  const { isListening, toggle: toggleMic, error: micError, isSupported: micSupported } = useVoiceInput({
+    onTranscript: (text) => setInputValue(text),
+  })
 
   const { messages, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
@@ -313,23 +318,50 @@ export default function SeasonAiDirectorPanel({
       {/* Input — only shown before starting */}
       {!hasStarted && (
         <div className="px-4 py-3 border-t border-border flex-shrink-0 space-y-2">
+          {isListening && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+              <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse flex-shrink-0" />
+              <p className="text-xs text-red-300">Listening... describe your full season brief</p>
+            </div>
+          )}
+          {micError && <p className="text-xs text-destructive">{micError}</p>}
           <form onSubmit={handleSend} className="flex gap-2 items-end">
             <textarea
               ref={textareaRef}
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`e.g. "40 shots per episode, fast-cut TikTok energy, Alice in 3 locations, brand reveal at episode midpoints, creator looks to camera every 5th shot..."`}
+              placeholder={
+                isListening
+                  ? 'Listening...'
+                  : `Tap mic and speak, or type — "40 shots per episode, fast-cut TikTok energy, Alice in 3 locations..."`
+              }
               rows={3}
               className="flex-1 bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none leading-relaxed"
             />
-            <button
-              type="submit"
-              disabled={!inputValue.trim()}
-              className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 mb-0.5"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex flex-col gap-1.5 flex-shrink-0">
+              {micSupported && (
+                <button
+                  type="button"
+                  onClick={() => toggleMic(inputValue)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    isListening
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                  }`}
+                  title={isListening ? 'Stop recording' : 'Speak your brief'}
+                >
+                  {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={!inputValue.trim()}
+                className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </form>
           <p className="text-xs text-muted-foreground/40 text-center">
             Enter to generate · Shift+Enter for new line · GPT-4o

@@ -4,7 +4,8 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Sparkles, X, Send, RotateCcw, CheckCircle2, Loader2 } from 'lucide-react'
+import { Sparkles, X, Send, RotateCcw, CheckCircle2, Loader2, Mic, MicOff } from 'lucide-react'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
 
 type Props = {
   episodeId: string
@@ -33,6 +34,10 @@ export default function AiDirectorPanel({ episodeId, episodeTitle, onClose, onSh
   const [inputValue, setInputValue] = useState('')
   const [generated, setGenerated] = useState<GenerateResult | null>(null)
   const [hasConversation, setHasConversation] = useState(false)
+
+  const { isListening, toggle: toggleMic, error: micError, isSupported: micSupported } = useVoiceInput({
+    onTranscript: (text) => setInputValue(text),
+  })
 
   const { messages, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
@@ -267,6 +272,16 @@ export default function AiDirectorPanel({ episodeId, episodeTitle, onClose, onSh
 
       {/* Input */}
       <div className="px-4 py-3 border-t border-border flex-shrink-0 space-y-2">
+        {/* Listening indicator */}
+        {isListening && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+            <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse flex-shrink-0" />
+            <p className="text-xs text-red-300">Listening... speak your brief</p>
+          </div>
+        )}
+        {micError && (
+          <p className="text-xs text-destructive">{micError}</p>
+        )}
         <form onSubmit={handleSend} className="flex gap-2 items-end">
           <textarea
             ref={textareaRef}
@@ -274,14 +289,31 @@ export default function AiDirectorPanel({ episodeId, episodeTitle, onClose, onSh
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              !hasConversation
-                ? 'Describe what you need — shot count, sequences, locations, dialogue, talent direction...'
-                : isLoading ? 'Working on it...' : 'Refine, adjust, or add more...'
+              isListening
+                ? 'Listening...'
+                : !hasConversation
+                  ? 'Describe what you need — or tap the mic and speak...'
+                  : isLoading ? 'Working on it...' : 'Refine, adjust, or add more...'
             }
             disabled={isLoading}
             rows={1}
             className="flex-1 bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 resize-none leading-relaxed"
           />
+          {micSupported && (
+            <button
+              type="button"
+              onClick={() => toggleMic(inputValue)}
+              disabled={isLoading}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 mb-0.5 ${
+                isListening
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
+              } disabled:opacity-40`}
+              title={isListening ? 'Stop recording' : 'Speak your brief'}
+            >
+              {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+            </button>
+          )}
           <button
             type="submit"
             disabled={isLoading || !inputValue.trim()}
