@@ -2,16 +2,18 @@
 
 import { useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import MentionTextarea from '@/components/admin/MentionTextarea'
+import AiDirectorPanel from '@/components/admin/AiDirectorPanel'
 import {
   Plus, Trash2, Wand2, ExternalLink, ChevronDown, ChevronUp,
   Camera, Move, Eye, Clock, FileText, Mic, Package, StickyNote,
-  CheckCircle2, Circle, Film, GripVertical
+  CheckCircle2, Circle, Film, GripVertical, Sparkles
 } from 'lucide-react'
 
 const SHOT_TYPES = [
@@ -182,12 +184,40 @@ export default function ShotList({
     }
   }
 
+  const router = useRouter()
+  const [aiOpen, setAiOpen] = useState(false)
   const totalDuration = shots.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
   const shotCount = shots.length
   const approvedCount = shots.filter(s => s.status === 'approved').length
 
+  async function handleShotsGenerated() {
+    // Reload shots from DB after AI generates them
+    const supabaseClient = createClient()
+    const { data } = await supabaseClient
+      .from('shots')
+      .select('*')
+      .eq('episode_id', episodeId)
+      .order('number', { ascending: true })
+    if (data) {
+      setShots(data as Shot[])
+      setExpanded(new Set())
+    }
+  }
+
   return (
     <div className="space-y-4">
+      {/* AI Director panel */}
+      {aiOpen && (
+        <div className="fixed inset-y-0 right-0 z-50 w-80 bg-card border-l border-border shadow-2xl flex flex-col">
+          <AiDirectorPanel
+            episodeId={episodeId}
+            episodeTitle={episodeTitle}
+            onClose={() => setAiOpen(false)}
+            onShotsGenerated={handleShotsGenerated}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -198,10 +228,21 @@ export default function ShotList({
             {totalDuration > 0 && <span>~{Math.floor(totalDuration / 60)}:{String(totalDuration % 60).padStart(2, '0')} total</span>}
           </div>
         </div>
-        <Button onClick={addShot} size="sm" className="gap-2">
-          <Plus className="w-3.5 h-3.5" />
-          Add shot
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setAiOpen(o => !o)}
+            size="sm"
+            variant="outline"
+            className="gap-2 border-violet-500/30 text-violet-400 hover:bg-violet-500/10 hover:text-violet-300"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            AI Director
+          </Button>
+          <Button onClick={addShot} size="sm" className="gap-2">
+            <Plus className="w-3.5 h-3.5" />
+            Add shot
+          </Button>
+        </div>
       </div>
 
       {/* Script reference */}
