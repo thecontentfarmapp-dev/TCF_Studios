@@ -221,9 +221,11 @@ export default function ShotList({
           return (
             <div key={shot.id} className="rounded-xl border border-border bg-card overflow-hidden">
               {/* Shot header row */}
-              <div
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/20 transition-colors select-none"
+              <button
+                className="flex items-center gap-3 px-4 py-3 w-full text-left cursor-pointer hover:bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                 onClick={() => toggleExpand(shot.id)}
+                aria-expanded={isExpanded}
+                aria-controls={`shot-${shot.id}`}
               >
                 <span className="text-xs font-mono text-muted-foreground w-8 flex-shrink-0">
                   {String(shot.number).padStart(3, '0')}
@@ -260,11 +262,11 @@ export default function ShotList({
                   </Badge>
                   {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </div>
-              </div>
+              </button>
 
               {/* Expanded editor */}
               {isExpanded && (
-                <div className="border-t border-border p-4 space-y-5">
+                <div id={`shot-${shot.id}`} className="border-t border-border p-4 space-y-5">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Left: storyboard frame */}
                     <div className="space-y-3">

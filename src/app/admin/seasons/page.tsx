@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { statusColor, formatDate, formatDateShort } from '@/lib/status'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import Link from 'next/link'
@@ -8,18 +9,6 @@ const SEASON_ORDER = ['development', 'pre_production', 'production', 'post', 'di
 
 function seasonProgress(status: SeasonStatus) {
   return Math.round(((SEASON_ORDER.indexOf(status) + 1) / SEASON_ORDER.length) * 100)
-}
-
-function statusColor(status: SeasonStatus) {
-  const map: Record<SeasonStatus, string> = {
-    development: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    pre_production: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    production: 'bg-violet-500/15 text-violet-400 border-violet-500/30',
-    post: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-    distribution: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    complete: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-  }
-  return map[status]
 }
 
 export default async function SeasonsPage() {

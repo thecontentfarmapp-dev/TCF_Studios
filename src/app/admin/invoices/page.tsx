@@ -1,17 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import { statusColor, formatDate, formatDateShort } from '@/lib/status'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { AlertCircle, CheckCircle2, Clock, Receipt } from 'lucide-react'
-
-function statusColor(status: string) {
-  const map: Record<string, string> = {
-    draft: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-    sent: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    paid: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    overdue: 'bg-red-500/15 text-red-400 border-red-500/30',
-  }
-  return map[status] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30'
-}
 
 export default async function InvoicesPage() {
   const supabase = await createClient()

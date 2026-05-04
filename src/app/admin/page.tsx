@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { statusColor, formatDate, formatDateShort } from '@/lib/status'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -24,23 +25,6 @@ function phaseProgress(phase: string) {
 
 function seasonProgress(status: string) {
   return Math.round(((SEASON_ORDER.indexOf(status) + 1) / SEASON_ORDER.length) * 100)
-}
-
-function statusColor(status: string) {
-  const map: Record<string, string> = {
-    active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    production: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    post: 'bg-violet-500/15 text-violet-400 border-violet-500/30',
-    development: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    paid: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    sent: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    overdue: 'bg-red-500/15 text-red-400 border-red-500/30',
-    locked: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    in_review: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    draft: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-    scheduled: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  }
-  return map[status] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30'
 }
 
 export default async function AdminDashboard() {

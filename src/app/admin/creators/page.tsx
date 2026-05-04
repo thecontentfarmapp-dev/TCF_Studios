@@ -1,20 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
+import { statusColor, formatDate, formatDateShort } from '@/lib/status'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { AtSign, Users } from 'lucide-react'
 import type { CreatorStatus } from '@/lib/supabase/types'
-
-function statusColor(status: CreatorStatus) {
-  const map: Record<CreatorStatus, string> = {
-    prospect: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-    in_conversation: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    soft_commitment: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    signed: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-    active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    alumni: 'bg-zinc-600/15 text-zinc-500 border-zinc-600/30',
-  }
-  return map[status]
-}
 
 function formatAudience(n: number | null) {
   if (!n) return '—'

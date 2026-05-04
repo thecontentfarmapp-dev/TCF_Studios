@@ -1,26 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
+import { statusColor, formatDate, formatDateShort } from '@/lib/status'
 import { notFound } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Mail, Phone, Globe, ArrowLeft } from 'lucide-react'
-
-function statusColor(status: string) {
-  const map: Record<string, string> = {
-    lead: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-    in_conversation: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    proposal_sent: 'bg-violet-500/15 text-violet-400 border-violet-500/30',
-    negotiating: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    signed: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-    active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    alumni: 'bg-zinc-600/15 text-zinc-500 border-zinc-600/30',
-    paid: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    sent: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    overdue: 'bg-red-500/15 text-red-400 border-red-500/30',
-    draft: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-  }
-  return map[status] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30'
-}
 
 export default async function BrandDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

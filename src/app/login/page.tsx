@@ -52,9 +52,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight gradient-text">TCF Studios</h1>
-          <p className="text-sm text-muted-foreground">The Content Farm Studios</p>
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded bg-white flex items-center justify-center mx-auto">
+            <span className="text-black text-sm font-black tracking-tight">TCF</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">TCF Studios</h1>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mt-0.5">The Content Farm</p>
+          </div>
         </div>
 
         {/* Card */}

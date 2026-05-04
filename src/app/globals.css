@@ -87,12 +87,15 @@
   --sidebar-ring: oklch(0.65 0.25 290);
 }
 
-/* Brand portal — clean light professional */
+/* Brand portal — clean light professional, always light regardless of OS setting */
 .brand-portal {
+  color-scheme: light;
   --background: oklch(0.99 0 0);
   --foreground: oklch(0.12 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.12 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.12 0 0);
   --primary: oklch(0.25 0.03 264);
   --primary-foreground: oklch(0.98 0 0);
   --secondary: oklch(0.97 0 0);
@@ -101,6 +104,7 @@
   --muted-foreground: oklch(0.55 0 0);
   --border: oklch(0.9 0 0);
   --input: oklch(0.92 0 0);
+  --ring: oklch(0.25 0.03 264);
 }
 
 @layer base {
@@ -115,30 +119,3 @@
   }
 }
 
-/* Gradient text utility */
-.gradient-text {
-  background: linear-gradient(135deg, #7c3aed, #2563eb, #06b6d4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Gradient border utility */
-.gradient-border {
-  border: 1px solid transparent;
-  background-clip: padding-box;
-  position: relative;
-}
-
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, #7c3aed40, #2563eb40, #06b6d440);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}

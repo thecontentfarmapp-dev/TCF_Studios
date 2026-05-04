@@ -1,33 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
+import { statusColor, formatDate, formatDateShort } from '@/lib/status'
 import { notFound } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ArrowLeft, AtSign, Mail, Phone } from 'lucide-react'
 import type { CreatorStatus } from '@/lib/supabase/types'
-
-function statusColor(status: CreatorStatus) {
-  const map: Record<CreatorStatus, string> = {
-    prospect: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-    in_conversation: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    soft_commitment: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    signed: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-    active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    alumni: 'bg-zinc-600/15 text-zinc-500 border-zinc-600/30',
-  }
-  return map[status]
-}
-
-function phaseColor(status: string) {
-  const map: Record<string, string> = {
-    development: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    pre_production: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    production: 'bg-violet-500/15 text-violet-400 border-violet-500/30',
-    post: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-    distribution: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    complete: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-  }
-  return map[status] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30'
-}
 
 function formatAudience(n: number | null) {
   if (!n) return '—'
@@ -131,7 +108,7 @@ export default async function CreatorDetailPage({ params }: { params: Promise<{ 
               <div className="p-4 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors space-y-2 mb-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-medium">{season.title}</p>
-                  <Badge className={`text-xs border ${phaseColor(season.status)}`}>{season.status.replace('_', ' ')}</Badge>
+                  <Badge className={`text-xs border ${statusColor(season.status)}`}>{season.status.replace('_', ' ')}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {(season.brands as { company_name: string } | null)?.company_name || 'No brand'} · {season.episode_count} episodes

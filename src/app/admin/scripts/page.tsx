@@ -1,17 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { statusColor, formatDate, formatDateShort } from '@/lib/status'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-
-function statusColor(status: string) {
-  const map: Record<string, string> = {
-    draft: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',
-    in_review: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    creator_approved: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    brand_approved: 'bg-violet-500/15 text-violet-400 border-violet-500/30',
-    locked: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-  }
-  return map[status] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30'
-}
 
 export default async function ScriptsPage() {
   const supabase = await createClient()
