@@ -18,8 +18,9 @@ export default function NewInvoicePage() {
   const [loading, setLoading] = useState(false)
   const [brands, setBrands] = useState<Brand[]>([])
   const [seasons, setSeasons] = useState<Season[]>([])
+  const [selectedBrandId, setSelectedBrandId] = useState('')
+  const [selectedSeasonId, setSelectedSeasonId] = useState('')
   const [form, setForm] = useState({
-    brand_id: '', season_id: '',
     amount: '', type: 'custom',
     status: 'draft', due_date: '', notes: '',
   })
@@ -35,8 +36,8 @@ export default function NewInvoicePage() {
     e.preventDefault()
     setLoading(true)
     const { data, error } = await supabase.from('invoices').insert([{
-      brand_id: form.brand_id,
-      season_id: form.season_id || null,
+      brand_id: selectedBrandId,
+      season_id: selectedSeasonId || null,
       amount: parseFloat(form.amount),
       type: form.type,
       status: form.status,
@@ -61,8 +62,12 @@ export default function NewInvoicePage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Brand *</Label>
-              <Select value={form.brand_id} onValueChange={v => set('brand_id', v)} required>
-                <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
+              <Select value={selectedBrandId} onValueChange={v => setSelectedBrandId(v ?? '')}>
+                <SelectTrigger>
+                  <span className={selectedBrandId ? 'text-foreground' : 'text-muted-foreground'}>
+                    {brands.find(b => b.id === selectedBrandId)?.company_name ?? 'Select brand'}
+                  </span>
+                </SelectTrigger>
                 <SelectContent>
                   {brands.map(b => <SelectItem key={b.id} value={b.id}>{b.company_name}</SelectItem>)}
                 </SelectContent>
@@ -70,8 +75,12 @@ export default function NewInvoicePage() {
             </div>
             <div className="space-y-2">
               <Label>Season (optional)</Label>
-              <Select value={form.season_id} onValueChange={v => set('season_id', v)}>
-                <SelectTrigger><SelectValue placeholder="Select season" /></SelectTrigger>
+              <Select value={selectedSeasonId} onValueChange={v => setSelectedSeasonId(v ?? '')}>
+                <SelectTrigger>
+                  <span className={selectedSeasonId ? 'text-foreground' : 'text-muted-foreground'}>
+                    {seasons.find(s => s.id === selectedSeasonId)?.title ?? 'Select season'}
+                  </span>
+                </SelectTrigger>
                 <SelectContent>
                   {seasons.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
                 </SelectContent>
@@ -115,7 +124,7 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-3">
-          <Button type="submit" disabled={loading || !form.brand_id || !form.amount}>{loading ? 'Creating...' : 'Create invoice'}</Button>
+          <Button type="submit" disabled={loading || !selectedBrandId || !form.amount}>{loading ? 'Creating...' : 'Create invoice'}</Button>
           <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
         </div>
       </form>
