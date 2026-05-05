@@ -147,6 +147,8 @@ function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (resu
   const [inputValue, setInputValue] = useState('')
   const [started, setStarted] = useState(false)
 
+  const [chatClosed, setChatClosed] = useState(false)
+
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/intake/chat',
@@ -157,12 +159,22 @@ function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (resu
         (p: any) => p.type === 'tool-submit_lead' && p.output != null
       )
       if (toolPart?.output) {
-        onDone(toolPart.output as SubmitResult)
+        setChatClosed(true)
+        // Short delay so they can read the final message before success screen
+        setTimeout(() => onDone(toolPart.output as SubmitResult), 2500)
       }
     },
   })
 
   const isLoading = status === 'streaming' || status === 'submitted'
+
+  // Disable input as soon as the tool call appears in messages (before result comes back)
+  useEffect(() => {
+    const hasToolCall = messages.some(m =>
+      (m as any).parts?.some((p: any) => p.type === 'tool-submit_lead')
+    )
+    if (hasToolCall) setChatClosed(true)
+  }, [messages])
 
   const { isListening, toggle: toggleMic, isSupported: micSupported } = useVoiceInput({
     onTranscript: (text) => setInputValue(text),
@@ -270,42 +282,50 @@ function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (resu
       {/* Input */}
       <div className="flex-shrink-0 border-t border-white/6 px-4 py-4">
         <div className="max-w-xl mx-auto space-y-2">
-          {isListening && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
-              <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse flex-shrink-0" />
-              <p className="text-xs text-red-300">Listening...</p>
-            </div>
+          {chatClosed ? (
+            <p className="text-center text-xs text-white/25 py-2">
+              We've received your brief — our team will be in touch within 24 hours.
+            </p>
+          ) : (
+            <>
+              {isListening && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse flex-shrink-0" />
+                  <p className="text-xs text-red-300">Listening...</p>
+                </div>
+              )}
+              <form onSubmit={handleSend} className="flex gap-2 items-end">
+                <textarea
+                  ref={textareaRef}
+                  value={inputValue}
+                  onChange={e => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={isLoading ? '' : 'Reply...'}
+                  disabled={isLoading}
+                  rows={1}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 resize-none leading-relaxed disabled:opacity-40"
+                />
+                {micSupported && (
+                  <button
+                    type="button"
+                    onClick={() => toggleMic(inputValue)}
+                    disabled={isLoading}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${isListening ? 'bg-red-500 text-white' : 'bg-white/5 border border-white/10 text-white/40 hover:text-white/70'} disabled:opacity-40`}
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+                )}
+                <button
+                    type="submit"
+                    disabled={isLoading || !inputValue.trim()}
+                    className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center hover:bg-white/90 transition-colors flex-shrink-0 disabled:opacity-30"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+                <p className="text-center text-xs text-white/20">Enter to send · Shift+Enter for new line</p>
+            </>
           )}
-          <form onSubmit={handleSend} className="flex gap-2 items-end">
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={isLoading ? '' : 'Reply...'}
-              disabled={isLoading}
-              rows={1}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 resize-none leading-relaxed disabled:opacity-40"
-            />
-            {micSupported && (
-              <button
-                type="button"
-                onClick={() => toggleMic(inputValue)}
-                disabled={isLoading}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${isListening ? 'bg-red-500 text-white' : 'bg-white/5 border border-white/10 text-white/40 hover:text-white/70'} disabled:opacity-40`}
-              >
-                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={isLoading || !inputValue.trim()}
-              className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center hover:bg-white/90 transition-colors flex-shrink-0 disabled:opacity-30"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
-          <p className="text-center text-xs text-white/20">Enter to send · Shift+Enter for new line</p>
         </div>
       </div>
     </div>

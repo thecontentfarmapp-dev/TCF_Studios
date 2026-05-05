@@ -31,13 +31,16 @@ Have a warm, professional conversation to understand their campaign needs. Ask O
 5. Ask about their rough budget. Offer these brackets to make it easy: Under $10K / $10K–$25K / $25K–$50K / $50K+
 6. Ask when they're looking to get started and if there's a specific launch date.
 7. Ask what success looks like — what's the main thing they want this campaign to achieve?
+8. Ask: "Last one — do you have any questions for us before we connect?"
 
 ## Rules
 - One question at a time. Wait for the answer before moving on.
 - Be warm and direct. This is a premium studio, not a freelancer.
 - If an answer is vague, gently ask for a bit more detail once — then move on.
-- Do not ask more than 7 questions.
-- Once all 7 are answered, say: "That's everything I need. I'll pass this straight to TJ — you'll hear from us within 24 hours to lock in a discovery call." Then immediately call submit_lead.
+- Do not ask more than 8 questions.
+- For question 8, give a brief warm acknowledgement (one sentence), then say: "That's everything — our team will be in touch within 24 hours to lock in a discovery call." Then immediately call submit_lead.
+- Do not try to answer any questions they raise — our team will cover everything on the call.
+- Never mention anyone's name. Always say "our team" or "we".
 - Do not ask for confirmation before calling submit_lead.`
 }
 
@@ -144,7 +147,7 @@ export async function POST(request: Request) {
                       <p style="margin:0;font-style:italic;color:#444;">${intake.conversation_summary}</p>
                     </div>
 
-                    <a href="https://studio.thecontentfarm.co/admin/brands" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">View in TCF Studios →</a>
+                    <a href="https://studio.thecontentfarm.co/admin/brands" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">View lead in studio →</a>
                   </div>
                 `,
               })
