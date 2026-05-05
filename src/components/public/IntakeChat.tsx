@@ -334,20 +334,20 @@ function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (resu
 
 // ─── Step 3: Success screen ──────────────────────────────────────────────────
 
-function SuccessScreen() {
+function SuccessScreen({ name }: { name: string }) {
+  const firstName = name.split(' ')[0]
   return (
     <div className="min-h-screen bg-[#080810] text-white flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center space-y-6">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto">
-          <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-        </div>
-        <div className="space-y-3">
-          <h1 className="text-2xl font-bold">You're in the queue.</h1>
-          <p className="text-white/50 leading-relaxed">
-            We've received your brief. TJ will review it and reach out within 24 hours to lock in a discovery call.
+        <div className="space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight">
+            Thanks {firstName},<br />we'll be in touch.
+          </h1>
+          <p className="text-white/40 leading-relaxed">
+            Our team will review your brief and reach out within 24 hours to set up a call.
           </p>
         </div>
-        <Link href="/" className="inline-block text-sm text-white/30 hover:text-white/60 transition-colors pt-2">
+        <Link href="/" className="inline-block text-sm text-white/25 hover:text-white/50 transition-colors pt-4">
           ← Back to home
         </Link>
       </div>
@@ -361,7 +361,7 @@ export default function IntakeChat() {
   const [contact, setContact] = useState<ContactInfo | null>(null)
   const [result, setResult] = useState<SubmitResult | null>(null)
 
-  if (result?.success) return <SuccessScreen />
+  if (result?.success) return <SuccessScreen name={contact?.name ?? ''} />
   if (contact) return <Conversation contact={contact} onDone={setResult} />
   return <ContactForm onSubmit={setContact} />
 }
