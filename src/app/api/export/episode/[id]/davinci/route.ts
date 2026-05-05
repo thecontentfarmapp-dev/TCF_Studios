@@ -120,8 +120,8 @@ export async function GET(
                 <timebase>${fps}</timebase>
                 <ntsc>FALSE</ntsc>
               </rate>
-              <string>${toTimecode(startF, fps)}</string>
-              <frame>${startF}</frame>
+              <string>00:00:00:00</string>
+              <frame>0</frame>
               <displayformat>NDF</displayformat>
             </timecode>
             <media>
