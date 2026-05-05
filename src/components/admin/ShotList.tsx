@@ -13,7 +13,7 @@ import AiDirectorPanel from '@/components/admin/AiDirectorPanel'
 import {
   Plus, Trash2, Wand2, ExternalLink, ChevronDown, ChevronUp,
   Camera, Move, Eye, Clock, FileText, Mic, Package, StickyNote,
-  CheckCircle2, Circle, Film, GripVertical, Sparkles
+  CheckCircle2, Circle, Film, GripVertical, Sparkles, Download
 } from 'lucide-react'
 
 const SHOT_TYPES = [
@@ -229,6 +229,28 @@ export default function ShotList({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {shotCount > 0 && (
+            <div className="relative group">
+              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors">
+                <Download className="w-3.5 h-3.5" />
+                DaVinci
+              </button>
+              {/* fps dropdown */}
+              <div className="absolute right-0 top-full mt-1 z-20 hidden group-hover:flex flex-col w-36 rounded-lg border border-border bg-popover shadow-lg overflow-hidden">
+                <p className="px-3 py-2 text-xs text-muted-foreground font-medium border-b border-border">Frame rate</p>
+                {[24, 25, 30].map(fps => (
+                  <a
+                    key={fps}
+                    href={`/api/export/episode/${episodeId}/davinci?fps=${fps}`}
+                    download
+                    className="px-3 py-2 text-sm hover:bg-muted transition-colors"
+                  >
+                    {fps}fps {fps === 25 ? '(PAL)' : fps === 24 ? '(Cinema)' : '(NTSC)'}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
           <Button
             onClick={() => setAiOpen(o => !o)}
             size="sm"
