@@ -242,7 +242,7 @@ export default function ShotList({
                   <a
                     key={fps}
                     href={`/api/export/episode/${episodeId}/davinci?fps=${fps}`}
-                    download
+                    download={`episode_ep${fps}fps.edl`}
                     className="px-3 py-2 text-sm hover:bg-muted transition-colors"
                   >
                     {fps}fps {fps === 25 ? '(PAL)' : fps === 24 ? '(Cinema)' : '(NTSC)'}

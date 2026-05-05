@@ -1,26 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 
-// Shot type → DaVinci/FCP colour label
-const SHOT_TYPE_COLOUR: Record<string, string> = {
-  establishing:       'Blue',
-  wide:               'Blue',
-  medium_wide:        'Green',
-  medium:             'Green',
-  medium_close:       'Yellow',
-  close_up:           'Red',
-  extreme_close_up:   'Red',
-  over_the_shoulder:  'Orange',
-  pov:                'Violet',
-  insert:             'Yellow',
-  cutaway:            'Orange',
+// Shot type → short label for reel name (max 8 chars, EDL standard)
+const SHOT_ABBREV: Record<string, string> = {
+  establishing:       'EST',
+  wide:               'WD',
+  medium_wide:        'MW',
+  medium:             'MED',
+  medium_close:       'MC',
+  close_up:           'CU',
+  extreme_close_up:   'ECU',
+  over_the_shoulder:  'OTS',
+  pov:                'POV',
+  insert:             'INS',
+  cutaway:            'CUT',
 }
 
 function frames(seconds: number, fps: number) {
   return Math.round(seconds * fps)
 }
 
-function toTimecode(totalFrames: number, fps: number) {
+function toTC(totalFrames: number, fps: number) {
   const s = Math.floor(totalFrames / fps)
   const f = totalFrames % fps
   const m = Math.floor(s / 60)
@@ -33,14 +33,10 @@ function toTimecode(totalFrames: number, fps: number) {
   ].join(':')
 }
 
-function escapeXml(str: string | null | undefined) {
+// Sanitise a string for EDL comment lines (no newlines)
+function edlStr(str: string | null | undefined, maxLen = 100) {
   if (!str) return ''
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
+  return str.replace(/[\r\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maxLen)
 }
 
 export async function GET(
@@ -50,6 +46,7 @@ export async function GET(
   const { id } = await params
   const url = new URL(request.url)
   const fps = parseInt(url.searchParams.get('fps') ?? '25')
+  const ntsc = fps === 29 || fps === 30 // use drop-frame for NTSC rates
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -74,135 +71,79 @@ export async function GET(
   }
 
   const season = episode.seasons as any
-  const sequenceName = `${season?.title ?? 'Season'} — Ep ${episode.number}${episode.title ? ` — ${episode.title}` : ''}`
-  const totalSeconds = shots.reduce((acc: number, s: any) => acc + (s.duration_seconds ?? 0), 0)
-  const totalFrames = frames(totalSeconds, fps)
+  const title = `${season?.title ?? 'Season'} — Ep ${episode.number}${episode.title ? ` — ${episode.title}` : ''}`
 
-  // Build clip items
-  let cursor = 0
-  const clipItems = shots.map((shot: any, index: number) => {
+  // Build EDL lines
+  let recordCursor = 0
+  const lines: string[] = []
+
+  for (const shot of shots as any[]) {
+    const num = String(shot.number).padStart(3, '0')
     const durationSec = shot.duration_seconds ?? 4
     const durationF = frames(durationSec, fps)
-    const startF = cursor
-    const endF = cursor + durationF
-    cursor = endF
 
-    const clipId = `clipitem-${index + 1}`
-    const fileId = `file-${index + 1}`
+    // Reel name: shot type abbrev + number, e.g. "CU-001" (max 8 chars)
+    const abbrev = SHOT_ABBREV[shot.shot_type ?? ''] ?? 'SH'
+    const reel = `${abbrev}-${num}`.slice(0, 8)
+
+    // Source: each clip runs 00:00:00:00 → clip duration from head of "reel"
+    const srcIn  = toTC(0, fps)
+    const srcOut = toTC(durationF, fps)
+
+    // Record: where it sits on the timeline
+    const recIn  = toTC(recordCursor, fps)
+    const recOut = toTC(recordCursor + durationF, fps)
+    recordCursor += durationF
+
+    // CMX 3600 edit line
+    lines.push(`${num}  ${reel.padEnd(8)}  V  C  ${srcIn} ${srcOut} ${recIn} ${recOut}`)
+
+    // FROM CLIP NAME — DaVinci picks this up as the clip's display name
+    const clipName = `${num} — ${edlStr(shot.description ?? shot.scene_beat ?? 'Shot', 80)}`
+    lines.push(`* FROM CLIP NAME: ${clipName}`)
+
+    // Camera / shot details
     const shotLabel = [
       shot.shot_type?.replace(/_/g, ' '),
       shot.camera_angle?.replace(/_/g, ' '),
       shot.camera_movement?.replace(/_/g, ' '),
     ].filter(Boolean).join(' | ')
-    const clipName = `${String(shot.number).padStart(3, '0')} — ${escapeXml(shot.description ?? shot.scene_beat ?? 'Shot')}`
-    const colour = SHOT_TYPE_COLOUR[shot.shot_type ?? ''] ?? 'None'
+    if (shotLabel) lines.push(`* SHOT: ${shotLabel}`)
 
-    return `        <clipitem id="${clipId}">
-          <name>${clipName}</name>
-          <duration>${durationF}</duration>
-          <rate>
-            <timebase>${fps}</timebase>
-            <ntsc>FALSE</ntsc>
-          </rate>
-          <start>${startF}</start>
-          <end>${endF}</end>
-          <in>0</in>
-          <out>${durationF}</out>
-          <file id="${fileId}">
-            <name>${clipName}</name>
-            <duration>${durationF}</duration>
-            <rate>
-              <timebase>${fps}</timebase>
-              <ntsc>FALSE</ntsc>
-            </rate>
-            <timecode>
-              <rate>
-                <timebase>${fps}</timebase>
-                <ntsc>FALSE</ntsc>
-              </rate>
-              <string>00:00:00:00</string>
-              <frame>0</frame>
-              <displayformat>NDF</displayformat>
-            </timecode>
-            <media>
-              <video>
-                <samplecharacteristics>
-                  <width>1080</width>
-                  <height>1920</height>
-                </samplecharacteristics>
-              </video>
-            </media>
-          </file>
-          <labels>
-            <label2>${colour}</label2>
-          </labels>
-          <logginginfo>
-            <description>${escapeXml(shot.dialogue)}</description>
-            <scene>${escapeXml(shot.scene_beat)}</scene>
-            <shottake>${String(shot.number).padStart(3, '0')}</shottake>
-            <lognote>${escapeXml([shotLabel, shot.props ? `Props: ${shot.props}` : '', shot.notes].filter(Boolean).join(' | '))}</lognote>
-          </logginginfo>
-          <comments>
-            <mastercomment1>${escapeXml(shotLabel)}</mastercomment1>
-            <mastercomment2>${escapeXml(shot.description)}</mastercomment2>
-          </comments>
-        </clipitem>`
-  }).join('\n')
+    // Scene beat
+    if (shot.scene_beat) lines.push(`* BEAT: ${edlStr(shot.scene_beat)}`)
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE xmeml PUBLIC "-//Apple//DTD XMEML 1.0//EN" "http://developer.apple.com/DTDs/XMEML.dtd">
-<xmeml version="5">
-  <sequence>
-    <name>${escapeXml(sequenceName)}</name>
-    <duration>${totalFrames}</duration>
-    <rate>
-      <timebase>${fps}</timebase>
-      <ntsc>FALSE</ntsc>
-    </rate>
-    <timecode>
-      <rate>
-        <timebase>${fps}</timebase>
-        <ntsc>FALSE</ntsc>
-      </rate>
-      <string>00:00:00:00</string>
-      <frame>0</frame>
-      <displayformat>NDF</displayformat>
-    </timecode>
-    <media>
-      <video>
-        <format>
-          <samplecharacteristics>
-            <width>1080</width>
-            <height>1920</height>
-            <pixelaspectratio>square</pixelaspectratio>
-            <fielddominance>none</fielddominance>
-            <rate>
-              <timebase>${fps}</timebase>
-              <ntsc>FALSE</ntsc>
-            </rate>
-          </samplecharacteristics>
-        </format>
-        <track>
-${clipItems}
-        </track>
-      </video>
-    </media>
-    <labels>
-      <label2>None</label2>
-    </labels>
-    <logginginfo>
-      <description>${escapeXml(sequenceName)}</description>
-      <scene>${escapeXml(season?.title ?? '')}</scene>
-      <lognote>${shots.length} shots · ${totalSeconds}s · ${fps}fps · Generated by TCF Studios</lognote>
-    </logginginfo>
-  </sequence>
-</xmeml>`
+    // Dialogue
+    if (shot.dialogue) lines.push(`* DIALOGUE: ${edlStr(shot.dialogue)}`)
 
-  const filename = `TCF_${(season?.title ?? 'Season').replace(/[^a-zA-Z0-9]/g, '_')}_Ep${episode.number}_${fps}fps.xml`
+    // Props
+    if (shot.props) lines.push(`* PROPS: ${edlStr(shot.props)}`)
 
-  return new Response(xml, {
+    // Director notes
+    if (shot.notes) lines.push(`* NOTES: ${edlStr(shot.notes)}`)
+
+    // Duration note
+    lines.push(`* DURATION: ${durationSec}s`)
+
+    lines.push('') // blank line between edits
+  }
+
+  const totalSec = shots.reduce((acc: number, s: any) => acc + (s.duration_seconds ?? 0), 0)
+
+  const edl = [
+    `TITLE: ${edlStr(title, 100)}`,
+    `FCM: ${ntsc ? 'DROP FRAME' : 'NON-DROP FRAME'}`,
+    '',
+    ...lines,
+    `* SEQUENCE INFO: ${shots.length} shots · ${totalSec}s total · ${fps}fps · Generated by TCF Studios`,
+  ].join('\n')
+
+  const safeName = (season?.title ?? 'Season').replace(/[^a-zA-Z0-9]/g, '_')
+  const filename = `TCF_${safeName}_Ep${episode.number}_${fps}fps.edl`
+
+  return new Response(edl, {
     headers: {
-      'Content-Type': 'application/xml',
+      'Content-Type': 'text/plain; charset=utf-8',
       'Content-Disposition': `attachment; filename="${filename}"`,
     },
   })
