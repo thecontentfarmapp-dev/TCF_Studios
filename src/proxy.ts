@@ -1,6 +1,19 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PUBLIC_PATHS = [
+  '/login',
+  '/auth/callback',
+  '/auth/confirm',
+  '/apply',
+  '/api/intake',
+]
+
+function isPublic(pathname: string) {
+  if (pathname === '/') return true
+  return PUBLIC_PATHS.some(p => pathname.startsWith(p))
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -23,17 +36,12 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
   const { pathname } = request.nextUrl
 
-  // Public routes
-  const publicRoutes = ['/login', '/auth/callback', '/auth/confirm']
-  if (publicRoutes.some(r => pathname.startsWith(r))) {
-    return supabaseResponse
-  }
+  if (isPublic(pathname)) return supabaseResponse
 
-  // Redirect unauthenticated users to login
+  const { data: { user } } = await supabase.auth.getUser()
+
   if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
