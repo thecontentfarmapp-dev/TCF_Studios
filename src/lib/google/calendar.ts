@@ -3,6 +3,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 const TIMEZONE = 'Australia/Sydney'
 const SLOT_DURATION = 30 // minutes
+const BUFFER_MINUTES = 30 // no back-to-back — block one slot before and after each booking
 const BUSINESS_HOURS = { start: 8, end: 16 } // 8am–4pm Sydney
 const DAYS_AHEAD = 14
 const WORKING_DAYS = [1, 2, 3, 4, 5] // Mon–Fri
@@ -88,10 +89,11 @@ export async function getAvailableSlots(): Promise<{ start: string; end: string;
             w => w.day === dayOfWeek && sydneyHour >= w.startHour && sydneyHour < w.endHour
           )
 
-          // Check if this slot overlaps any busy period
+          // Check if this slot overlaps any busy period (+ buffer either side)
+          const bufferMs = BUFFER_MINUTES * 60 * 1000
           const isBusy = busy.some(b => {
-            const busyStart = new Date(b.start!)
-            const busyEnd = new Date(b.end!)
+            const busyStart = new Date(new Date(b.start!).getTime() - bufferMs)
+            const busyEnd = new Date(new Date(b.end!).getTime() + bufferMs)
             return slotStart < busyEnd && slotEnd > busyStart
           })
 
