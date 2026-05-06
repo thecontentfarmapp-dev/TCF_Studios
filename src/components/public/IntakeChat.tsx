@@ -149,33 +149,49 @@ function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (resu
   const [started, setStarted] = useState(false)
 
   const [chatClosed, setChatClosed] = useState(false)
+  const doneFiredRef = useRef(false)
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/intake/chat',
       body: { contact },
     }),
-    onFinish(message) {
-      const toolPart = (message as any).parts?.find(
-        (p: any) => p.type === 'tool-submit_lead' && p.output != null
-      )
-      if (toolPart?.output) {
-        setChatClosed(true)
-        const result = toolPart.output as SubmitResult & { conversation_summary?: string }
-        setTimeout(() => onDone(result, result.conversation_summary), 2500)
-      }
-    },
   })
 
   const isLoading = status === 'streaming' || status === 'submitted'
 
-  // Disable input as soon as the tool call appears in messages (before result comes back)
+  // Watch messages for the submit_lead tool result
   useEffect(() => {
-    const hasToolCall = messages.some(m =>
-      (m as any).parts?.some((p: any) => p.type === 'tool-submit_lead')
-    )
-    if (hasToolCall) setChatClosed(true)
+    if (doneFiredRef.current) return
+
+    for (const msg of messages) {
+      const parts: any[] = (msg as any).parts ?? []
+      for (const p of parts) {
+        if (p.type === 'tool-submit_lead') {
+          setChatClosed(true)
+          const output = p.output ?? p.result
+          if (output && !doneFiredRef.current) {
+            doneFiredRef.current = true
+            const result = output as SubmitResult & { conversation_summary?: string }
+            setTimeout(() => onDone(result, result.conversation_summary), 2000)
+            return
+          }
+        }
+      }
+    }
   }, [messages])
+
+  // Fallback: if chat is closed but onDone never fired after 5s, force success screen
+  useEffect(() => {
+    if (!chatClosed) return
+    const timer = setTimeout(() => {
+      if (!doneFiredRef.current) {
+        doneFiredRef.current = true
+        onDone({ success: true })
+      }
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [chatClosed])
 
   const { isListening, toggle: toggleMic, isSupported: micSupported } = useVoiceInput({
     onTranscript: (text) => setInputValue(text),

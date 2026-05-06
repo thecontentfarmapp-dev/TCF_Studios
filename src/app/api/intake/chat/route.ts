@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     model: openai('gpt-4o'),
     system: buildSystemPrompt(safeContact),
     messages: modelMessages,
-    stopWhen: stepCountIs(12),
+    stopWhen: stepCountIs(20),
     tools: {
       submit_lead: tool({
         description: 'Save the completed lead to the database and notify TJ. Call this after all questions have been answered.',
