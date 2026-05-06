@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     if (process.env.RESEND_API_KEY && meetLink) {
       const { Resend } = await import('resend')
       const resend = new Resend(process.env.RESEND_API_KEY)
-      const slotLabel = new Date(start).toLocaleString('en-NZ', {
-        timeZone: 'Pacific/Auckland',
+      const slotLabel = new Date(start).toLocaleString('en-AU', {
+        timeZone: 'Australia/Sydney',
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
             <div style="background:#f9f9f9;border-radius:10px;padding:20px;margin:24px 0;">
               <p style="margin:0 0 8px;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">When</p>
-              <p style="margin:0;font-size:16px;font-weight:600;">${slotLabel} (NZST)</p>
+              <p style="margin:0;font-size:16px;font-weight:600;">${slotLabel} (AEST)</p>
             </div>
 
             <div style="background:#f9f9f9;border-radius:10px;padding:20px;margin:24px 0;">

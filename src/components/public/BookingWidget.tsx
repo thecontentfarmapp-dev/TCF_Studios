@@ -18,8 +18,8 @@ type BookingStatus = 'idle' | 'loading_slots' | 'picking' | 'confirming' | 'book
 function groupByDay(slots: Slot[]): Record<string, Slot[]> {
   const groups: Record<string, Slot[]> = {}
   for (const slot of slots) {
-    const day = new Date(slot.start).toLocaleDateString('en-NZ', {
-      timeZone: 'Pacific/Auckland',
+    const day = new Date(slot.start).toLocaleDateString('en-AU', {
+      timeZone: 'Australia/Sydney',
       weekday: 'long',
       month: 'long',
       day: 'numeric',
@@ -31,8 +31,8 @@ function groupByDay(slots: Slot[]): Record<string, Slot[]> {
 }
 
 function timeOnly(isoStr: string) {
-  return new Date(isoStr).toLocaleString('en-NZ', {
-    timeZone: 'Pacific/Auckland',
+  return new Date(isoStr).toLocaleString('en-AU', {
+    timeZone: 'Australia/Sydney',
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -165,7 +165,7 @@ export default function BookingWidget({ contact, brandId, intakeSummary }: Props
     <div className="mt-10 pt-8 border-t border-white/8 space-y-5">
       <div className="space-y-1">
         <p className="text-sm font-semibold">Book a discovery call</p>
-        <p className="text-xs text-white/35">30 minutes · Google Meet · NZST</p>
+        <p className="text-xs text-white/35">30 minutes · Google Meet · AEST</p>
       </div>
 
       {slots.length === 0 && (
@@ -177,9 +177,9 @@ export default function BookingWidget({ contact, brandId, intakeSummary }: Props
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {days.slice(0, 12).map(day => {
             const date = new Date(grouped[day][0].start)
-            const dayNum = date.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', day: 'numeric' })
-            const dayName = date.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'short' })
-            const monthName = date.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', month: 'short' })
+            const dayNum = date.toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney', day: 'numeric' })
+            const dayName = date.toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney', weekday: 'short' })
+            const monthName = date.toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney', month: 'short' })
             const isSelected = selectedDay === day
             return (
               <button

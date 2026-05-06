@@ -9,19 +9,20 @@ import type { Profile } from '@/lib/supabase/types'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
   LayoutDashboard, Building2, Users, Film, Clapperboard,
-  FileText, Calendar, Receipt, BarChart3, LogOut, Menu,
+  FileText, Calendar, Receipt, BarChart3, LogOut, Menu, Video,
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/admin',           label: 'Dashboard',  icon: LayoutDashboard, exact: true },
-  { href: '/admin/brands',    label: 'Brands',     icon: Building2 },
-  { href: '/admin/creators',  label: 'Creators',   icon: Users },
-  { href: '/admin/seasons',   label: 'Seasons',    icon: Film },
-  { href: '/admin/episodes',  label: 'Episodes',   icon: Clapperboard },
-  { href: '/admin/scripts',   label: 'Scripts',    icon: FileText },
-  { href: '/admin/shoots',    label: 'Shoot Days', icon: Calendar },
-  { href: '/admin/invoices',  label: 'Invoices',   icon: Receipt },
-  { href: '/admin/analytics', label: 'Analytics',  icon: BarChart3 },
+  { href: '/admin',            label: 'Dashboard',       icon: LayoutDashboard, exact: true },
+  { href: '/admin/brands',     label: 'Brands',          icon: Building2 },
+  { href: '/admin/creators',   label: 'Creators',        icon: Users },
+  { href: '/admin/seasons',    label: 'Seasons',         icon: Film },
+  { href: '/admin/episodes',   label: 'Episodes',        icon: Clapperboard },
+  { href: '/admin/scripts',    label: 'Scripts',         icon: FileText },
+  { href: '/admin/shoots',     label: 'Shoot Days',      icon: Calendar },
+  { href: '/admin/bookings',   label: 'Discovery Calls', icon: Video },
+  { href: '/admin/invoices',   label: 'Invoices',        icon: Receipt },
+  { href: '/admin/analytics',  label: 'Analytics',       icon: BarChart3 },
 ]
 
 function NavContent({
