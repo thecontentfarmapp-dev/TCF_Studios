@@ -62,9 +62,13 @@ export default async function AdminDashboard() {
     { label: 'Pending Approvals', value: pendingScripts.length, icon: Clock, color: 'text-amber-400' },
   ]
 
-  const searchParams = new URL(
-    typeof window !== 'undefined' ? window.location.href : 'http://localhost'
-  ).searchParams
+  const { data: calendarSetting } = await supabase
+    .from('settings')
+    .select('updated_at')
+    .eq('key', 'google_refresh_token')
+    .single()
+
+  const calendarConnected = !!calendarSetting
 
   return (
     <div className="p-6 space-y-6 max-w-7xl">
@@ -76,14 +80,20 @@ export default async function AdminDashboard() {
             {new Date().toLocaleDateString('en-NZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <Link
-          href="/api/auth/google"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors flex-shrink-0"
-          title="Connect Google Calendar to enable booking"
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          Connect Calendar
-        </Link>
+        {calendarConnected ? (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-400 flex-shrink-0">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Calendar connected
+          </div>
+        ) : (
+          <Link
+            href="/api/auth/google"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors flex-shrink-0"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            Connect Calendar
+          </Link>
+        )}
       </div>
 
       {/* Alerts */}
