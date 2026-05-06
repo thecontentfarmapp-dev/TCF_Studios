@@ -136,25 +136,53 @@ export default function BookingWidget({ contact, brandId, intakeSummary }: Props
   // ── Booked ───────────────────────────────────────────────────────────────────
   if (bookingStatus === 'booked') {
     return (
-      <div className="mt-10 pt-8 border-t border-white/8 space-y-4">
+      <div className="mt-10 pt-8 border-t border-white/8 space-y-5">
         <div className="flex items-center gap-2.5">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-          <p className="text-sm font-medium text-emerald-300">Call confirmed</p>
+          <p className="text-sm font-semibold text-emerald-300">You're booked in.</p>
         </div>
+
+        {/* Call details */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-          <p className="text-sm font-medium">{selectedSlot?.label}</p>
-          <p className="text-xs text-white/40">A calendar invite has been sent to {contact.email}</p>
+          <div>
+            <p className="text-xs text-white/40 uppercase tracking-wide mb-1">When</p>
+            <p className="text-sm font-medium">{selectedSlot?.label} (AEST)</p>
+          </div>
           {meetLink && (
-            <a
-              href={meetLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-white font-medium hover:opacity-80 transition-opacity"
-            >
-              <Video className="w-4 h-4 text-blue-400" />
-              Open Google Meet
-            </a>
+            <div>
+              <p className="text-xs text-white/40 uppercase tracking-wide mb-1.5">Join the call</p>
+              <a
+                href={meetLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-white font-medium hover:opacity-80 transition-opacity"
+              >
+                <Video className="w-4 h-4 text-blue-400" />
+                Open Google Meet
+              </a>
+            </div>
           )}
+          <p className="text-xs text-white/30 pt-1 border-t border-white/8">
+            A calendar invite has been sent to {contact.email}
+          </p>
+        </div>
+
+        {/* What to expect */}
+        <div className="space-y-2">
+          <p className="text-xs text-white/40 uppercase tracking-wide font-medium">What we'll cover</p>
+          <ul className="space-y-1.5">
+            {[
+              'Your brand goals and what you\'re looking to create',
+              'Our production approach and process',
+              'Timelines and next steps if it\'s a fit',
+            ].map(item => (
+              <li key={item} className="flex items-start gap-2 text-sm text-white/60">
+                <span className="text-white/25 mt-0.5">—</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-white/30 pt-1">Feel free to bring any references or inspiration.</p>
         </div>
       </div>
     )
