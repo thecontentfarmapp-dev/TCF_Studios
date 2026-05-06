@@ -68,10 +68,11 @@ export async function getAvailableSlots(): Promise<{ start: string; end: string;
   const auth = await getOAuthClient()
   const calendar = google.calendar({ version: 'v3', auth })
 
-  // Range: start from tomorrow (UTC midnight), 14 days ahead
-  const rangeStart = new Date()
-  rangeStart.setUTCDate(rangeStart.getUTCDate() + 1)
-  rangeStart.setUTCHours(0, 0, 0, 0)
+  // Earliest bookable slot: now + 24h, rounded up to next 30-min boundary.
+  // This enforces a minimum 24-hour notice and blocks same-day bookings.
+  const slotMs = SLOT_MINUTES * 60 * 1000
+  const earliest = Date.now() + 24 * 60 * 60 * 1000
+  const rangeStart = new Date(Math.ceil(earliest / slotMs) * slotMs)
 
   const rangeEnd = new Date(rangeStart)
   rangeEnd.setUTCDate(rangeEnd.getUTCDate() + DAYS_AHEAD)
@@ -88,8 +89,6 @@ export async function getAvailableSlots(): Promise<{ start: string; end: string;
 
   const busy = freeBusy.data.calendars?.[process.env.GOOGLE_CALENDAR_ID ?? 'primary']?.busy ?? []
   const bufferMs = BUFFER_MINUTES * 60 * 1000
-  const slotMs = SLOT_MINUTES * 60 * 1000
-
   const slots: { start: string; end: string; label: string }[] = []
 
   // Iterate every 30 minutes across the whole range.
