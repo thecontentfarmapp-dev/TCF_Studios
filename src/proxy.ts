@@ -7,6 +7,8 @@ const PUBLIC_PATHS = [
   '/auth/confirm',
   '/apply',
   '/api/intake',
+  '/api/calendar/slots',
+  '/api/calendar/book',
 ]
 
 function isPublic(pathname: string) {

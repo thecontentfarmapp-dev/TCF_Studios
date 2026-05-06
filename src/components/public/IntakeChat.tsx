@@ -6,6 +6,7 @@ import { DefaultChatTransport } from 'ai'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Send, CheckCircle2, Mic, MicOff } from 'lucide-react'
 import { useVoiceInput } from '@/hooks/useVoiceInput'
+import BookingWidget from '@/components/public/BookingWidget'
 
 type ContactInfo = {
   name: string
@@ -141,7 +142,7 @@ function ContactForm({ onSubmit }: { onSubmit: (info: ContactInfo) => void }) {
 
 // ─── Step 2: AI conversation ─────────────────────────────────────────────────
 
-function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (result: SubmitResult) => void }) {
+function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (result: SubmitResult, summary?: string) => void }) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [inputValue, setInputValue] = useState('')
@@ -160,8 +161,8 @@ function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (resu
       )
       if (toolPart?.output) {
         setChatClosed(true)
-        // Short delay so they can read the final message before success screen
-        setTimeout(() => onDone(toolPart.output as SubmitResult), 2500)
+        const result = toolPart.output as SubmitResult & { conversation_summary?: string }
+        setTimeout(() => onDone(result, result.conversation_summary), 2500)
       }
     },
   })
@@ -334,22 +335,39 @@ function Conversation({ contact, onDone }: { contact: ContactInfo; onDone: (resu
 
 // ─── Step 3: Success screen ──────────────────────────────────────────────────
 
-function SuccessScreen({ name }: { name: string }) {
-  const firstName = name.split(' ')[0]
+function SuccessScreen({
+  contact,
+  brandId,
+  intakeSummary,
+}: {
+  contact: ContactInfo
+  brandId?: string
+  intakeSummary: string
+}) {
+  const firstName = contact.name.split(' ')[0]
   return (
-    <div className="min-h-screen bg-[#080810] text-white flex items-center justify-center p-6">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="space-y-4">
+    <div className="min-h-screen bg-[#080810] text-white flex items-start justify-center p-6 pt-16">
+      <div className="max-w-md w-full">
+        <div className="space-y-3 text-center">
           <h1 className="text-4xl font-bold tracking-tight">
             Thanks {firstName},<br />we'll be in touch.
           </h1>
           <p className="text-white/40 leading-relaxed">
-            Our team will review your brief and reach out within 24 hours to set up a call.
+            Our team will review your brief and reach out within 24 hours.
           </p>
         </div>
-        <Link href="/" className="inline-block text-sm text-white/25 hover:text-white/50 transition-colors pt-4">
-          ← Back to home
-        </Link>
+
+        <BookingWidget
+          contact={contact}
+          brandId={brandId}
+          intakeSummary={intakeSummary}
+        />
+
+        <div className="text-center mt-8">
+          <Link href="/" className="text-sm text-white/25 hover:text-white/50 transition-colors">
+            ← Back to home
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -360,8 +378,27 @@ function SuccessScreen({ name }: { name: string }) {
 export default function IntakeChat() {
   const [contact, setContact] = useState<ContactInfo | null>(null)
   const [result, setResult] = useState<SubmitResult | null>(null)
+  const [intakeSummary, setIntakeSummary] = useState('')
 
-  if (result?.success) return <SuccessScreen name={contact?.name ?? ''} />
-  if (contact) return <Conversation contact={contact} onDone={setResult} />
+  if (result?.success) {
+    return (
+      <SuccessScreen
+        contact={contact!}
+        brandId={result.brandId}
+        intakeSummary={intakeSummary}
+      />
+    )
+  }
+  if (contact) {
+    return (
+      <Conversation
+        contact={contact}
+        onDone={(r, summary) => {
+          setIntakeSummary(summary ?? '')
+          setResult(r)
+        }}
+      />
+    )
+  }
   return <ContactForm onSubmit={setContact} />
 }

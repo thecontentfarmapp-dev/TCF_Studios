@@ -151,7 +151,7 @@ export async function POST(request: Request) {
               })
             }
 
-            return { success: true, brandId: brand.id }
+            return { success: true, brandId: brand.id, conversation_summary: intake.conversation_summary }
           } catch (error: any) {
             console.error('Lead submission error:', error)
             return { success: false, error: error.message }
