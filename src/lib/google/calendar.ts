@@ -2,13 +2,14 @@ import { google } from 'googleapis'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 const TIMEZONE = 'Australia/Sydney'
-const SLOT_DURATION = 30 // minutes
-const BUFFER_MINUTES = 30 // no back-to-back — block one slot before and after each booking
+const SLOT_MINUTES = 30
+const BUFFER_MINUTES = 30  // blocks slot before and after each booking
 const BUSINESS_HOURS = { start: 8, end: 16 } // 8am–4pm Sydney
 const DAYS_AHEAD = 14
-const WORKING_DAYS = [1, 2, 3, 4, 5] // Mon–Fri
+const WORKING_DAYS = [1, 2, 3, 4, 5] // Mon–Fri (0=Sun, 6=Sat)
 
-// Blocked windows per weekday (Sydney time) — day: 0=Sun,1=Mon,...6=Sat
+// Blocked windows — checked in Sydney local time
+// day: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri
 const BLOCKED_WINDOWS = [
   { day: 2, startHour: 9,  endHour: 13 }, // Tue 9am–1pm
   { day: 3, startHour: 10, endHour: 13 }, // Wed 10am–1pm
@@ -20,6 +21,29 @@ const adminSupabase = createAdminClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// Returns the day of week in Sydney timezone (0=Sun … 6=Sat)
+function sydneyDayOfWeek(date: Date): number {
+  const name = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE,
+    weekday: 'long',
+  }).format(date)
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(name)
+}
+
+// Returns the hour (0–23) in Sydney timezone for a given UTC instant
+function sydneyHour(date: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE,
+    hour: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+  return parseInt(parts.find(p => p.type === 'hour')?.value ?? '0') % 24
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 export async function getOAuthClient() {
   const { data } = await adminSupabase
     .from('settings')
@@ -28,7 +52,6 @@ export async function getOAuthClient() {
     .single()
 
   const refreshToken = data?.value ?? process.env.GOOGLE_REFRESH_TOKEN
-
   if (!refreshToken) throw new Error('Google refresh token not configured. Visit /api/auth/google to authorise.')
 
   const oauth2Client = new google.auth.OAuth2(
@@ -39,20 +62,21 @@ export async function getOAuthClient() {
   return oauth2Client
 }
 
+// ─── Available slots ──────────────────────────────────────────────────────────
+
 export async function getAvailableSlots(): Promise<{ start: string; end: string; label: string }[]> {
   const auth = await getOAuthClient()
   const calendar = google.calendar({ version: 'v3', auth })
 
-  const now = new Date()
-  // Start from tomorrow to give at least 24 hours notice
-  const rangeStart = new Date(now)
-  rangeStart.setDate(rangeStart.getDate() + 1)
-  rangeStart.setHours(0, 0, 0, 0)
+  // Range: start from tomorrow (UTC midnight), 14 days ahead
+  const rangeStart = new Date()
+  rangeStart.setUTCDate(rangeStart.getUTCDate() + 1)
+  rangeStart.setUTCHours(0, 0, 0, 0)
 
   const rangeEnd = new Date(rangeStart)
-  rangeEnd.setDate(rangeEnd.getDate() + DAYS_AHEAD)
+  rangeEnd.setUTCDate(rangeEnd.getUTCDate() + DAYS_AHEAD)
 
-  // Get busy periods
+  // Fetch busy periods from Google Calendar
   const freeBusy = await calendar.freebusy.query({
     requestBody: {
       timeMin: rangeStart.toISOString(),
@@ -63,65 +87,58 @@ export async function getAvailableSlots(): Promise<{ start: string; end: string;
   })
 
   const busy = freeBusy.data.calendars?.[process.env.GOOGLE_CALENDAR_ID ?? 'primary']?.busy ?? []
+  const bufferMs = BUFFER_MINUTES * 60 * 1000
+  const slotMs = SLOT_MINUTES * 60 * 1000
 
-  // Generate all possible slots
   const slots: { start: string; end: string; label: string }[] = []
-  const cursor = new Date(rangeStart)
+
+  // Iterate every 30 minutes across the whole range.
+  // All filtering is done in Sydney timezone — fixes the UTC setHours bug.
+  let cursor = new Date(rangeStart)
 
   while (cursor < rangeEnd) {
-    const dayOfWeek = cursor.getDay()
-    if (WORKING_DAYS.includes(dayOfWeek)) {
-      // Generate slots for this day in NZST
-      const dayStart = new Date(cursor)
-      dayStart.setHours(BUSINESS_HOURS.start, 0, 0, 0)
-      const dayEnd = new Date(cursor)
-      dayEnd.setHours(BUSINESS_HOURS.end, 0, 0, 0)
+    const slotEnd = new Date(cursor.getTime() + slotMs)
+    const dow = sydneyDayOfWeek(cursor)
+    const hour = sydneyHour(cursor)
 
-      let slotStart = new Date(dayStart)
-      while (slotStart < dayEnd) {
-        const slotEnd = new Date(slotStart.getTime() + SLOT_DURATION * 60 * 1000)
-        if (slotEnd <= dayEnd) {
-          // Get hour in Sydney time for blocked window check
-          const sydneyHour = parseInt(
-            slotStart.toLocaleString('en-AU', { timeZone: TIMEZONE, hour: 'numeric', hour12: false })
-          )
-          const isBlocked = BLOCKED_WINDOWS.some(
-            w => w.day === dayOfWeek && sydneyHour >= w.startHour && sydneyHour < w.endHour
-          )
+    // 1. Must be a working day in Sydney
+    if (WORKING_DAYS.includes(dow)) {
+      // 2. Must be within business hours in Sydney
+      if (hour >= BUSINESS_HOURS.start && hour < BUSINESS_HOURS.end) {
+        // 3. Not in a blocked window
+        const isBlocked = BLOCKED_WINDOWS.some(
+          w => w.day === dow && hour >= w.startHour && hour < w.endHour
+        )
 
-          // Check if this slot overlaps any busy period (+ buffer either side)
-          const bufferMs = BUFFER_MINUTES * 60 * 1000
-          const isBusy = busy.some(b => {
-            const busyStart = new Date(new Date(b.start!).getTime() - bufferMs)
-            const busyEnd = new Date(new Date(b.end!).getTime() + bufferMs)
-            return slotStart < busyEnd && slotEnd > busyStart
+        // 4. Not overlapping a calendar event (+ buffer either side)
+        const isBusy = busy.some(b => {
+          const bStart = new Date(new Date(b.start!).getTime() - bufferMs)
+          const bEnd   = new Date(new Date(b.end!).getTime() + bufferMs)
+          return cursor < bEnd && slotEnd > bStart
+        })
+
+        if (!isBlocked && !isBusy) {
+          const label = cursor.toLocaleString('en-AU', {
+            timeZone: TIMEZONE,
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
           })
-
-          if (!isBusy && !isBlocked) {
-            const label = slotStart.toLocaleString('en-AU', {
-              timeZone: TIMEZONE,
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-            })
-            slots.push({
-              start: slotStart.toISOString(),
-              end: slotEnd.toISOString(),
-              label,
-            })
-          }
+          slots.push({ start: cursor.toISOString(), end: slotEnd.toISOString(), label })
         }
-        slotStart = new Date(slotStart.getTime() + SLOT_DURATION * 60 * 1000)
       }
     }
-    cursor.setDate(cursor.getDate() + 1)
+
+    cursor = new Date(cursor.getTime() + slotMs)
   }
 
   return slots
 }
+
+// ─── Create booking ───────────────────────────────────────────────────────────
 
 export async function createBooking(opts: {
   start: string
