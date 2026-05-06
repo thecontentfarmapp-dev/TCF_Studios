@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Mail, Phone, Globe, ArrowLeft } from 'lucide-react'
+import DeleteBrandButton from './DeleteBrandButton'
 
 export default async function BrandDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -21,17 +22,20 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="p-6 space-y-6 max-w-4xl">
-      <div className="flex items-center gap-3">
-        <Link href="/admin/brands" className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">{brand.company_name}</h1>
-            <Badge className={`text-xs border ${statusColor(brand.status)}`}>{brand.status.replace('_', ' ')}</Badge>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Link href="/admin/brands" className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight">{brand.company_name}</h1>
+              <Badge className={`text-xs border ${statusColor(brand.status)}`}>{brand.status.replace('_', ' ')}</Badge>
+            </div>
+            {brand.industry && <p className="text-sm text-muted-foreground mt-0.5">{brand.industry}</p>}
           </div>
-          {brand.industry && <p className="text-sm text-muted-foreground mt-0.5">{brand.industry}</p>}
         </div>
+        <DeleteBrandButton brandId={brand.id} brandName={brand.company_name} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

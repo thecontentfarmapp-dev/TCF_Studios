@@ -159,7 +159,7 @@ export async function createBooking(opts: {
       description: [
         `Hi ${opts.contactName},`,
         '',
-        `This is your 30-minute discovery call with The Content Farm Studios.`,
+        `This is your 30-minute discovery call with our director TJ Tauroa at The Content Farm Studios.`,
         '',
         `We'll cover:`,
         `— Your brand goals and what you're looking to create`,

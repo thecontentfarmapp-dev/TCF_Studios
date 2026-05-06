@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       })
       const firstName = contact.name.split(' ')[0]
       await resend.emails.send({
-        from: 'TCF Studios <hello@thecontentfarm.co>',
+        from: 'TCF Studios <studio@thecontentfarm.co>',
         to: [contact.email],
         subject: `Your discovery call with TCF Studios is confirmed`,
         html: `
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
             </div>
 
             <p style="font-size:16px;margin-bottom:4px;">Hi ${firstName},</p>
-            <p style="color:#444;margin-top:0;">Your 30-minute discovery call with The Content Farm Studios is confirmed.</p>
+            <p style="color:#444;margin-top:0;">This is your 30-minute discovery call with our director TJ Tauroa at The Content Farm Studios.</p>
 
             <div style="background:#f9f9f9;border-radius:10px;padding:20px;margin:24px 0;">
               <p style="margin:0 0 6px;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">When</p>

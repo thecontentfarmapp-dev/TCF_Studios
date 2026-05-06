@@ -119,7 +119,7 @@ export async function POST(request: Request) {
               const { Resend } = await import('resend')
               const resend = new Resend(process.env.RESEND_API_KEY)
               await resend.emails.send({
-                from: 'TCF Studios <hello@thecontentfarm.co>',
+                from: 'TCF Studios <studio@thecontentfarm.co>',
                 to: ['thecontentfarm1@gmail.com'],
                 subject: `New lead: ${safeContact.brand} — ${intake.budget_range}`,
                 html: `
