@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Video, Phone, Mail, Building2, Calendar, Clock } from 'lucide-react'
+import { Video, Phone, Mail, Clock, Calendar, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { syncBookingsWithGoogle } from '@/lib/google/sync'
@@ -127,17 +127,26 @@ export default async function BookingsPage() {
                   </div>
                 </div>
 
-                {booking.meet_link && (
-                  <a
-                    href={booking.meet_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors flex-shrink-0"
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link
+                    href={`/admin/bookings/${booking.id}`}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:border-white/20 transition-colors"
                   >
-                    <Video className="w-4 h-4" />
-                    Join Meet
-                  </a>
-                )}
+                    Call prep
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                  {booking.meet_link && (
+                    <a
+                      href={booking.meet_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      <Video className="w-4 h-4" />
+                      Join Meet
+                    </a>
+                  )}
+                </div>
               </div>
 
               {/* Contact details */}
