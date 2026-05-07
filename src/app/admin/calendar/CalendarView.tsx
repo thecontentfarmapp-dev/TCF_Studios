@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronLeft, ChevronRight, Video, X, Mail, Phone } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Video, X, Mail, Phone, RefreshCw } from 'lucide-react'
 
 type Booking = {
   id: string
@@ -46,6 +46,8 @@ export default function CalendarView() {
   const [current, setCurrent] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selected, setSelected] = useState<Booking | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncKey, setSyncKey] = useState(0)
 
   const year = current.getFullYear()
   const month = current.getMonth()
@@ -61,7 +63,15 @@ export default function CalendarView() {
       .lte('start_time', rangeEnd)
       .order('start_time')
       .then(({ data }) => setBookings(data ?? []))
-  }, [year, month])
+  }, [year, month, syncKey])
+
+  async function handleSync() {
+    setSyncing(true)
+    await fetch('/api/admin/calendar/sync', { method: 'POST' })
+    setSyncKey(k => k + 1)
+    setSelected(null)
+    setSyncing(false)
+  }
 
   // Build 42-cell grid (6 rows × 7 cols)
   const firstDow = new Date(year, month, 1).getDay()
@@ -101,6 +111,14 @@ export default function CalendarView() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync'}
+            </button>
             <button
               onClick={() => setCurrent(new Date(year, month - 1, 1))}
               className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"

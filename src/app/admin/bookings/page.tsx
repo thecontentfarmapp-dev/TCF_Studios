@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Video, Phone, Mail, Building2, Calendar, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { syncBookingsWithGoogle } from '@/lib/google/sync'
 
 const TIMEZONE = 'Australia/Sydney'
 
@@ -22,6 +23,9 @@ function isUpcoming(iso: string) {
 }
 
 export default async function BookingsPage() {
+  // Sync with Google Calendar before rendering — removes deleted events, updates rescheduled times
+  try { await syncBookingsWithGoogle() } catch {}
+
   const supabase = await createClient()
 
   const { data: bookings } = await supabase
