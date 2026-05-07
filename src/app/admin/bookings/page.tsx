@@ -162,19 +162,6 @@ export default async function BookingsPage() {
                   </a>
                 )}
               </div>
-
-              {/* Intake summary */}
-              {booking.intake_summary && (
-                <div className="text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2.5 leading-relaxed">
-                  {booking.intake_summary}
-                </div>
-              )}
-
-              {booking.meet_link && (
-                <div className="text-xs text-muted-foreground/50 font-mono truncate">
-                  {booking.meet_link}
-                </div>
-              )}
             </div>
           ))}
         </div>
