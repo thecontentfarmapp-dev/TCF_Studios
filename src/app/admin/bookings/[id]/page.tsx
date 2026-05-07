@@ -75,7 +75,7 @@ export default async function BookingPrepPage({ params }: { params: Promise<{ id
   const isUpcoming = new Date(booking.start_time) > new Date()
 
   return (
-    <div className="p-6 max-w-4xl space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
