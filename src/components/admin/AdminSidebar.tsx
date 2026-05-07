@@ -9,7 +9,7 @@ import type { Profile } from '@/lib/supabase/types'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
   LayoutDashboard, Building2, Users, Film, Clapperboard,
-  FileText, Calendar, Receipt, BarChart3, LogOut, Menu, Video,
+  FileText, Calendar, CalendarDays, Receipt, BarChart3, LogOut, Menu, Video,
 } from 'lucide-react'
 
 const navItems = [
@@ -21,6 +21,7 @@ const navItems = [
   { href: '/admin/scripts',    label: 'Scripts',         icon: FileText },
   { href: '/admin/shoots',     label: 'Shoot Days',      icon: Calendar },
   { href: '/admin/bookings',   label: 'Discovery Calls', icon: Video },
+  { href: '/admin/calendar',   label: 'Calendar',        icon: CalendarDays },
   { href: '/admin/invoices',   label: 'Invoices',        icon: Receipt },
   { href: '/admin/analytics',  label: 'Analytics',       icon: BarChart3 },
 ]
