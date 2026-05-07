@@ -34,8 +34,11 @@ export default function PrepNotesPanel({ bookingId, intakeData }: Props) {
   useEffect(() => {
     const cached = localStorage.getItem(cacheKey)
     if (cached) {
-      try { setPrep(JSON.parse(cached)) } catch {}
+      try { setPrep(JSON.parse(cached)); return } catch {}
     }
+    // Auto-generate on first load
+    generate()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cacheKey])
 
   async function generate() {
@@ -71,18 +74,22 @@ export default function PrepNotesPanel({ bookingId, intakeData }: Props) {
           <Sparkles className="w-4 h-4 text-violet-400" />
           <h2 className="text-sm font-semibold">AI Call Prep</h2>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Generate tailored talking points, a package recommendation, and questions to ask based on this lead's intake.
-        </p>
-        {error && <p className="text-xs text-red-400">{error}</p>}
-        <button
-          onClick={generate}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm font-medium hover:bg-violet-500/20 transition-colors disabled:opacity-50"
-        >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {loading ? 'Generating...' : 'Generate prep notes'}
-        </button>
+        {error ? (
+          <>
+            <p className="text-xs text-red-400">{error}</p>
+            <button
+              onClick={generate}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm font-medium hover:bg-violet-500/20 transition-colors"
+            >
+              <Sparkles className="w-4 h-4" /> Try again
+            </button>
+          </>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin text-violet-400" />
+            Generating your call prep...
+          </div>
+        )}
       </div>
     )
   }

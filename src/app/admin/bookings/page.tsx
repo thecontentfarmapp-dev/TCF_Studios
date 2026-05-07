@@ -210,11 +210,9 @@ export default async function BookingsPage() {
                       {isoToTime(booking.start_time)}
                     </td>
                     <td className="px-4 py-3">
-                      {booking.meet_link && (
-                        <a href={booking.meet_link} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                          Meet link
-                        </a>
-                      )}
+                      <Link href={`/admin/bookings/${booking.id}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        View prep
+                      </Link>
                     </td>
                   </tr>
                 ))}
