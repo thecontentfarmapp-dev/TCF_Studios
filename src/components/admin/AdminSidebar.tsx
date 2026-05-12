@@ -8,15 +8,16 @@ import { useState } from 'react'
 import type { Profile } from '@/lib/supabase/types'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
-  LayoutDashboard, Building2, Users, CalendarDays, BarChart3, LogOut, Menu,
+  LayoutDashboard, Building2, Users, CalendarDays, BarChart3, LogOut, Menu, Presentation,
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/admin',           label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { href: '/admin/brands',    label: 'Brands',    icon: Building2 },
-  { href: '/admin/creators',  label: 'Creators',  icon: Users },
-  { href: '/admin/calendar',  label: 'Calendar',  icon: CalendarDays },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin',           label: 'Dashboard',  icon: LayoutDashboard, exact: true },
+  { href: '/admin/brands',    label: 'Brands',     icon: Building2 },
+  { href: '/admin/creators',  label: 'Creators',   icon: Users },
+  { href: '/admin/calendar',  label: 'Calendar',   icon: CalendarDays },
+  { href: '/admin/deck',      label: 'Pitch Deck', icon: Presentation },
+  { href: '/admin/analytics', label: 'Analytics',  icon: BarChart3 },
 ]
 
 function NavContent({
