@@ -62,7 +62,26 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       { responseType: 'text' }
     )
 
-    const notes = typeof content === 'string' ? content : String(content)
+    const raw = typeof content === 'string' ? content : String(content)
+
+    // Strip the Google Meet doc header (title, date, attendees, attachments, transcript link).
+    // The header always ends after the "Transcript" line — actual notes follow.
+    const headerMarkers = ['Transcript', 'Meeting records']
+    let notes = raw
+    for (const marker of headerMarkers) {
+      const idx = raw.indexOf(marker)
+      if (idx !== -1) {
+        notes = raw.slice(idx + marker.length).trimStart()
+        break
+      }
+    }
+
+    // If nothing meaningful remains, return a clear message
+    if (!notes.trim()) {
+      return NextResponse.json({
+        error: 'Gemini notes doc found but appears to have no notes content. Gemini may not have been active during the call.',
+      }, { status: 404 })
+    }
 
     // Save to bookings table
     await adminSupabase
