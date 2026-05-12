@@ -23,31 +23,38 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     const auth = await getOAuthClient()
     const drive = google.drive({ version: 'v3', auth })
 
-    // Search for Gemini notes doc created around the time of the meeting
     const meetingTime = new Date(booking.start_time)
-    const searchFrom = new Date(meetingTime.getTime() - 30 * 60 * 1000).toISOString() // 30min before
-    const searchTo = new Date(meetingTime.getTime() + 4 * 60 * 60 * 1000).toISOString() // 4hr after
 
-    const query = [
-      `name contains 'TCF Studios'`,
-      `mimeType = 'application/vnd.google-apps.document'`,
-      `createdTime > '${searchFrom}'`,
-      `createdTime < '${searchTo}'`,
-    ].join(' and ')
+    // Search broadly — no time bounds, just find docs with TCF Studios in the name.
+    // Fall back to brand name if nothing found.
+    const searches = [
+      `name contains 'TCF Studios' and mimeType = 'application/vnd.google-apps.document'`,
+      `name contains '${booking.brand_name}' and mimeType = 'application/vnd.google-apps.document'`,
+    ]
 
-    const { data: files } = await drive.files.list({
-      q: query,
-      fields: 'files(id, name, createdTime)',
-      orderBy: 'createdTime desc',
-      pageSize: 5,
-    })
-
-    if (!files?.files?.length) {
-      return NextResponse.json({ error: 'No Gemini notes found for this meeting yet. Try again in a few minutes.' }, { status: 404 })
+    let files: any[] = []
+    for (const q of searches) {
+      const { data } = await drive.files.list({
+        q,
+        fields: 'files(id, name, createdTime)',
+        orderBy: 'createdTime desc',
+        pageSize: 20,
+      })
+      if (data.files?.length) { files = data.files; break }
     }
 
-    // Use the most relevant file (closest to meeting time)
-    const file = files.files[0]
+    if (!files.length) {
+      return NextResponse.json({
+        error: 'No Gemini notes found in your Drive. Make sure Gemini note-taking was enabled during the call.',
+      }, { status: 404 })
+    }
+
+    // Pick the doc with createdTime closest to the meeting start
+    const file = files.reduce((best, f) => {
+      const diff = Math.abs(new Date(f.createdTime).getTime() - meetingTime.getTime())
+      const bestDiff = Math.abs(new Date(best.createdTime).getTime() - meetingTime.getTime())
+      return diff < bestDiff ? f : best
+    })
 
     // Export as plain text
     const { data: content } = await drive.files.export(
