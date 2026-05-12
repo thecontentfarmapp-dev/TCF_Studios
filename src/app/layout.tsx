@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Barlow_Condensed } from 'next/font/google'
+import { Inter, Bebas_Neue } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
@@ -7,10 +7,10 @@ const inter = Inter({
   subsets: ['latin'],
 })
 
-const barlowCondensed = Barlow_Condensed({
+const bebasNeue = Bebas_Neue({
   variable: '--font-display',
   subsets: ['latin'],
-  weight: ['600', '700', '800', '900'],
+  weight: ['400'],
 })
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${barlowCondensed.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} ${bebasNeue.variable} h-full`}>
       <body className="min-h-full bg-background text-foreground antialiased">
         {children}
       </body>
